@@ -10,164 +10,247 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 <style>
-body{
-    margin:0;
-    font-family:Arial;
-    background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
-    color:white;
-    text-align:center;
+* {
+    box-sizing: border-box;
 }
 
-header{
-    padding:20px;
-    font-size:22px;
-    background:rgba(0,0,0,0.3);
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    color: white;
+    text-align: center;
+    padding-bottom: 20px;
 }
 
-.box{padding:15px}
-
-input,select,textarea{
-    padding:8px;
-    margin:4px;
-    border:none;
-    border-radius:8px;
-    width:150px;
+header {
+    padding: 20px 10px;
+    font-size: 20px;
+    font-weight: bold;
+    background: rgba(0, 0, 0, 0.3);
 }
 
-textarea{
-    height:30px;
-    resize:none;
-    font-size:12px;
+.box {
+    padding: 15px;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
-button{
-    padding:6px 8px;
-    margin:2px;
-    border:none;
-    border-radius:8px;
-    cursor:pointer;
-    font-weight:bold;
+/* تحسين مرونة عناصر الإدخال والمجموعات */
+.form-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 15px;
 }
 
-.add{background:#00c853}
-.danger{background:#e53935}
-.editBtn{background:#03a9f4}
-.invoice{background:#ff9800}
-
-table{
-    width:100%;
-    margin-top:20px;
-    border-collapse:collapse;
-    background:rgba(255,255,255,0.1);
+input, select, textarea {
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    width: 100%; /* افتراضي للموبايل */
+    max-width: 200px; /* سقف محدد للكمبيوتر */
+    font-size: 14px;
 }
 
-th,td{
-    border:1px solid rgba(255,255,255,0.2);
-    padding:6px;
-    font-size:13px;
+textarea {
+    height: 40px;
+    resize: none;
+}
+
+button {
+    padding: 10px 14px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 14px;
+    transition: background 0.2s;
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+.add { background: #00c853; color: white; }
+.danger { background: #e53935; color: white; }
+.editBtn { background: #03a9f4; color: white; }
+.invoice { background: #ff9800; color: white; }
+
+hr {
+    border: 0;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 20px 0;
+}
+
+/* حاوية الجدول لجعله قابل للتمرير على الموبايل */
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+    margin-top: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: rgba(255, 255, 255, 0.05);
+    min-width: 800px; /* يضمن عدم تكدس النص على الشاشات الصغيرة */
+}
+
+th, td {
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 10px 8px;
+    font-size: 13px;
+    text-align: center;
+}
+
+th {
+    background: rgba(0, 0, 0, 0.4);
+}
+
+/* تحسين النافذة المنبثقة للموبايل */
+#modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    padding: 20px;
+    z-index: 9999;
+    overflow-y: auto;
+}
+
+.modal-content {
+    background: white;
+    color: black;
+    width: 100%;
+    max-width: 360px;
+    margin: 30px auto;
+    padding: 20px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.modal-content input, .modal-content select, .modal-content textarea {
+    max-width: 100%;
+    border: 1px solid #ccc;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 10px;
 }
 </style>
 </head>
 
 <body>
 
-<header> Big Hero Robotics Students CRM </header>
-
+<header>🤖 Big Hero Robotics Students CRM</header>
 
 <div class="box">
 
-<input type="text" id="groupName" placeholder="المجموعة">
-<button class="add" onclick="addGroup()">➕ إضافة</button>
+<div class="form-group">
+    <input type="text" id="groupName" placeholder="المجموعة">
+    <button class="add" onclick="addGroup()">➕ إضافة مجموعة</button>
+</div>
 
-<select id="groups"></select>
-<button class="danger" onclick="deleteGroup()">🗑️ حذف</button>
-
-<hr>
-
-<input type="text" id="studentName" placeholder="الطالب">
-<input type="number" id="lessonNumber" placeholder="الحصة">
-
-<select id="status">
-<option>حاضر</option>
-<option>غائب</option>
-</select>
-
-<select id="payment">
-<option>مدفوع</option>
-<option>غير مدفوع</option>
-</select>
-
-<input type="number" id="late" placeholder="غرامة">
-<textarea id="notes" placeholder="ملاحظات"></textarea>
-<input type="date" id="date">
-
-<button class="add" onclick="addStudent()">➕ إضافة طالب</button>
+<div class="form-group">
+    <select id="groups"></select>
+    <button class="danger" onclick="deleteGroup()">🗑️ حذف المجموعة</button>
+</div>
 
 <hr>
 
-<button onclick="exportJSON()" class="add">📤 JSON</button>
-<button onclick="exportExcel()" class="add">📊 Excel</button>
+<div class="form-group">
+    <input type="text" id="studentName" placeholder="اسم الطالب">
+    <input type="number" id="lessonNumber" placeholder="رقم الحصة">
+    <select id="status">
+        <option>حاضر</option>
+        <option>غائب</option>
+    </select>
+    <select id="payment">
+        <option>مدفوع</option>
+        <option>غير مدفوع</option>
+    </select>
+    <input type="number" id="late" placeholder="غرامة">
+    <textarea id="notes" placeholder="ملاحظات"></textarea>
+    <input type="date" id="date">
+</div>
 
-<button class="add" onclick="document.getElementById('fileInput').click()">📥 استيراد</button>
-<input type="file" id="fileInput" accept=".json" style="display:none" onchange="importJSON(event)">
+<div class="form-group">
+    <button class="add" style="max-width: 250px; width: 100%;" onclick="addStudent()">➕ إضافة طالب</button>
+</div>
 
 <hr>
 
-<table>
-<thead>
-<tr>
-<th>المجموعة</th>
-<th>الاسم</th>
-<th>الحصة</th>
-<th>التاريخ</th>
-<th>الحضور</th>
-<th>الدفع</th>
-<th>غرامة</th>
-<th>ملاحظات</th>
-<th>فاتورة</th>
-<th>تعديل</th>
-<th>حذف</th>
-</tr>
-</thead>
+<div class="form-group">
+    <button onclick="exportJSON()" class="add">📤 JSON</button>
+    <button onclick="exportExcel()" class="add">📊 Excel</button>
+    <button class="add" onclick="document.getElementById('fileInput').click()">📥 استيراد</button>
+    <input type="file" id="fileInput" accept=".json" style="display:none" onchange="importJSON(event)">
+</div>
 
-<tbody id="table"></tbody>
-</table>
+<hr>
+
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>المجموعة</th>
+                <th>الاسم</th>
+                <th>الحصة</th>
+                <th>التاريخ</th>
+                <th>الحضور</th>
+                <th>الدفع</th>
+                <th>غرامة</th>
+                <th>ملاحظات</th>
+                <th>فاتورة</th>
+                <th>تعديل</th>
+                <th>حذف</th>
+            </tr>
+        </thead>
+        <tbody id="table"></tbody>
+    </table>
+</div>
 
 </div>
 
-<div id="modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);padding-top:50px;">
-<div style="background:white;color:black;width:320px;margin:auto;padding:15px;border-radius:10px;">
-
-<h3>✏️ تعديل الطالب</h3>
-
-<input id="editName">
-<input id="editGroup">
-<input id="editLesson" type="number">
-<input id="editDate" type="date">
-
-<select id="editStatus">
-<option>حاضر</option>
-<option>غائب</option>
-</select>
-
-<select id="editPayment">
-<option>مدفوع</option>
-<option>غير مدفوع</option>
-</select>
-
-<input id="editLate" type="number">
-<textarea id="editNotes"></textarea>
-
-<br><br>
-
-<button class="add" onclick="saveEdit()">💾 حفظ</button>
-<button class="danger" onclick="closeModal()">❌ إغلاق</button>
-
-</div>
+<div id="modal">
+    <div class="modal-content">
+        <h3>✏️ تعديل الطالب</h3>
+        <input id="editName" placeholder="الاسم">
+        <input id="editGroup" placeholder="المجموعة">
+        <input id="editLesson" type="number" placeholder="الحصة">
+        <input id="editDate" type="date">
+        <select id="editStatus">
+            <option>حاضر</option>
+            <option>غائب</option>
+        </select>
+        <select id="editPayment">
+            <option>مدفوع</option>
+            <option>غير مدفوع</option>
+        </select>
+        <input id="editLate" type="number" placeholder="غرامة">
+        <textarea id="editNotes" placeholder="ملاحظات"></textarea>
+        
+        <div class="modal-buttons">
+            <button class="add" onclick="saveEdit()">💾 حفظ</button>
+            <button class="danger" onclick="closeModal()">❌ إغلاق</button>
+        </div>
+    </div>
 </div>
 
 <script>
-
 let groups = JSON.parse(localStorage.getItem("groups")) || [];
 let records = JSON.parse(localStorage.getItem("records")) || [];
 let editIndex = null;
@@ -182,24 +265,20 @@ function save(){
 }
 
 /* GROUPS */
-
 function addGroup(){
     let g=document.getElementById("groupName").value.trim();
     if(!g) return;
-
     if(groups.includes(g)) return alert("موجود");
-
     groups.push(g);
+    document.getElementById("groupName").value = "";
     save();
 }
 
 function deleteGroup(){
     let g=document.getElementById("groups").value;
-    if(!confirm("حذف المجموعة؟")) return;
-
+    if(!g || !confirm("حذف المجموعة؟")) return;
     groups=groups.filter(x=>x!==g);
     records=records.filter(r=>r.group!==g);
-
     save();
 }
 
@@ -212,9 +291,7 @@ function renderGroups(){
 }
 
 /* ADD */
-
 function addStudent(){
-
     let name=document.getElementById("studentName").value.trim();
     let group=document.getElementById("groups").value;
     let lesson=document.getElementById("lessonNumber").value||1;
@@ -224,7 +301,7 @@ function addStudent(){
     let notes=document.getElementById("notes").value;
     let date=document.getElementById("date").value;
 
-    if(!name||!group) return;
+    if(!name||!group) return alert("يرجى التأكد من اختيار مجموعة وإدخال اسم الطالب");
 
     let exists=records.some(r=>
         r.name===name && r.group===group && r.lesson==lesson
@@ -236,19 +313,22 @@ function addStudent(){
         group,name,lesson,status,payment,late,notes,date,amount:0
     });
 
+    // تفريغ الحقول الأساسية بعد الإضافة بنجاح
+    document.getElementById("studentName").value = "";
+    document.getElementById("late").value = "";
+    document.getElementById("notes").value = "";
+
     save();
 }
 
 /* DELETE */
-
 function deleteRecord(i){
-    if(!confirm("حذف؟")) return;
+    if(!confirm("حذف السجل؟")) return;
     records.splice(i,1);
     save();
 }
 
 /* TABLE */
-
 function render(){
     let t=document.getElementById("table");
     t.innerHTML="";
@@ -272,7 +352,6 @@ function render(){
 }
 
 /* EDIT */
-
 function openEdit(i){
     editIndex=i;
     let r=records[i];
@@ -310,7 +389,6 @@ function closeModal(){
 }
 
 /* EXPORT JSON */
-
 function exportJSON(){
     let data={groups,records};
     let blob=new Blob([JSON.stringify(data)],{type:"application/json"});
@@ -321,7 +399,6 @@ function exportJSON(){
 }
 
 /* EXPORT EXCEL */
-
 function exportExcel(){
     let ws=XLSX.utils.json_to_sheet(records);
     let wb=XLSX.utils.book_new();
@@ -330,26 +407,28 @@ function exportExcel(){
 }
 
 /* IMPORT JSON */
-
 function importJSON(e){
     let file=e.target.files[0];
+    if(!file) return;
     let reader=new FileReader();
 
     reader.onload=function(ev){
-        let data=JSON.parse(ev.target.result);
-        groups=data.groups||[];
-        records=data.records||[];
-        save();
+        try {
+            let data=JSON.parse(ev.target.result);
+            groups=data.groups||[];
+            records=data.records||[];
+            save();
+        } catch(err) {
+            alert("ملف غير صالح");
+        }
     };
 
     reader.readAsText(file);
 }
 
 /* INIT */
-
 renderGroups();
 render();
-
 </script>
 
 </body>
