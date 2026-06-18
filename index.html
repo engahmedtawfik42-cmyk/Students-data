@@ -8,6 +8,7 @@
 <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/4712/4712139.png">
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
 * {
@@ -36,7 +37,6 @@ header {
     margin: 0 auto;
 }
 
-/* تحسين مرونة عناصر الإدخال والمجموعات */
 .form-group {
     display: flex;
     flex-wrap: wrap;
@@ -49,8 +49,8 @@ input, select, textarea {
     padding: 10px;
     border: none;
     border-radius: 8px;
-    width: 100%; /* افتراضي للموبايل */
-    max-width: 200px; /* سقف محدد للكمبيوتر */
+    width: 100%;
+    max-width: 200px;
     font-size: 14px;
 }
 
@@ -85,7 +85,6 @@ hr {
     margin: 20px 0;
 }
 
-/* حاوية الجدول لجعله قابل للتمرير على الموبايل */
 .table-container {
     width: 100%;
     overflow-x: auto;
@@ -98,7 +97,7 @@ table {
     width: 100%;
     border-collapse: collapse;
     background: rgba(255, 255, 255, 0.05);
-    min-width: 800px; /* يضمن عدم تكدس النص على الشاشات الصغيرة */
+    min-width: 800px;
 }
 
 th, td {
@@ -112,7 +111,6 @@ th {
     background: rgba(0, 0, 0, 0.4);
 }
 
-/* تحسين النافذة المنبثقة للموبايل */
 #modal {
     display: none;
     position: fixed;
@@ -149,6 +147,11 @@ th {
     gap: 10px;
     justify-content: center;
     margin-top: 10px;
+}
+
+/* تنسيق مخفي للفاتورة يتم استخدامه عند التصدير لـ PDF فقط */
+#invoice-template {
+    display: none;
 }
 </style>
 </head>
@@ -250,6 +253,8 @@ th {
     </div>
 </div>
 
+<div id="invoice-holder"></div>
+
 <script>
 let groups = JSON.parse(localStorage.getItem("groups")) || [];
 let records = JSON.parse(localStorage.getItem("records")) || [];
@@ -313,7 +318,6 @@ function addStudent(){
         group,name,lesson,status,payment,late,notes,date,amount:0
     });
 
-    // تفريغ الحقول الأساسية بعد الإضافة بنجاح
     document.getElementById("studentName").value = "";
     document.getElementById("late").value = "";
     document.getElementById("notes").value = "";
@@ -344,7 +348,7 @@ function render(){
         <td>${r.payment}</td>
         <td>${r.late}</td>
         <td>${r.notes||""}</td>
-        <td><button class="invoice">فاتورة</button></td>
+        <td><button class="invoice" onclick="generatePDF(${i})">فاتورة</button></td>
         <td><button class="editBtn" onclick="openEdit(${i})">تعديل</button></td>
         <td><button class="danger" onclick="deleteRecord(${i})">حذف</button></td>
         </tr>`;
@@ -386,6 +390,77 @@ function saveEdit(){
 
 function closeModal(){
     document.getElementById("modal").style.display="none";
+}
+
+/* تفعيل زر الفاتورة وتحميلها PDF */
+function generatePDF(i) {
+    let r = records[i];
+    let holder = document.getElementById("invoice-holder");
+    
+    // تصميم شكل الفاتورة التي ستظهر في الـ PDF
+    holder.innerHTML = `
+        <div id="invoice-card" style="padding: 30px; font-family: Arial, sans-serif; color: #333; direction: rtl; background: #fff; border: 1px solid #eee;">
+            <div style="text-align: center; margin-bottom: 25px; border-bottom: 3px solid #203a43; padding-bottom: 15px;">
+                <h1 style="margin: 0; color: #203a43; font-size: 26px;">🤖 Big Hero Robotics</h1>
+                <p style="margin: 5px 0 0 0; color: #666; font-size: 14px;">أكاديمية تكنولوجيا الروبوت والذكاء الاصطناعي</p>
+            </div>
+            
+            <h3 style="text-align: center; background: #2c5364; color: white; padding: 6px; margin-bottom: 25px; border-radius: 4px;">فاتورة حضور حصة</h3>
+            
+            <div style="margin-bottom: 20px; font-size: 15px; line-height: 1.6;">
+                <p><strong>اسم الطالب:</strong> ${r.name}</p>
+                <p><strong>المجموعة:</strong> ${r.group}</p>
+                <p><strong>رقم الحصة:</strong> ${r.lesson}</p>
+                <p><strong>التاريخ:</strong> ${r.date}</p>
+            </div>
+            
+            <table style="width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px;">
+                <thead>
+                    <tr style="background: #f5f5f5;">
+                        <th style="border: 1px solid #ddd; padding: 10px; text-align: center; color:#333;">البند</th>
+                        <th style="border: 1px solid #ddd; padding: 10px; text-align: center; color:#333;">الحالة / القيمة</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 10px;">حالة الحضور</td>
+                        <td style="border: 1px solid #ddd; padding: 10px; text-align: center; font-weight: bold;">${r.status}</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 10px;">حالة الدفع الأساسية</td>
+                        <td style="border: 1px solid #ddd; padding: 10px; text-align: center; font-weight: bold; color: ${r.payment === 'مدفوع' ? 'green' : 'red'}">${r.payment}</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 10px;">غرامة / رسوم إضافية</td>
+                        <td style="border: 1px solid #ddd; padding: 10px; text-align: center; font-weight: bold;">${r.late} ج.م</td>
+                    </tr>
+                    ${r.notes ? `<tr>
+                        <td style="border: 1px solid #ddd; padding: 10px;">ملاحظات</td>
+                        <td style="border: 1px solid #ddd; padding: 10px; text-align: right; font-size: 12px; color: #55px;">${r.notes}</td>
+                    </tr>` : ''}
+                </tbody>
+            </table>
+            
+            <div style="margin-top: 40px; text-align: center; font-size: 12px; color: #888; border-top: 1px dashed #ddd; padding-top: 15px;">
+                شكرًا لثقتكم بأكاديميتنا ونراكم في الحصة القادمة المبدعة! 🚀
+            </div>
+        </div>
+    `;
+
+    // إعدادات مكتبة html2pdf
+    let opt = {
+        margin:       10,
+        filename:     `فاتورة_${r.name}_حصة_${r.lesson}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    // تشغيل عملية التصدير والتحميل فوراً
+    html2pdf().set(opt).from(holder).save().then(() => {
+        // تنظيف الحاوية بعد انتهاء التحميل لكي لا تؤثر على الواجهة
+        holder.innerHTML = "";
+    });
 }
 
 /* EXPORT JSON */
